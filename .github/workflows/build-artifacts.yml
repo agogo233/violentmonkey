@@ -1,0 +1,51 @@
+name: Build Artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '.github/**'
+      - src/types.d.ts
+      - LICENSE
+      - README.md
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 100
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: 'package.json'
+
+      - run: pnpm i
+
+      - run: pnpm build
+
+      - run: node scripts/action-helper.js
+
+      - name: Package Chromium (Chrome & Edge)
+        run: |
+          mkdir -p artifacts
+          cd dist && zip -r ../artifacts/violentmonkey-chromium-v${{ env.VERSION }}.zip .
+
+      - name: Set Firefox manifest
+        run: TARGET=selfHosted npx gulp manifest
+
+      - name: Package Firefox
+        run: |
+          cd dist && zip -r ../artifacts/violentmonkey-firefox-v${{ env.VERSION }}.zip .
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: violentmonkey-build-${{ env.VERSION }}
+          path: artifacts/*
