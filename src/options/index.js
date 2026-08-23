@@ -1,11 +1,9 @@
-import '@/common/browser';
 import {
   formatByteLength, getLocaleString, getScriptUpdateUrl, makePause, sendCmdDirectly, trueJoin,
 } from '@/common';
 import { kOrigTag, kTag } from '@/common/consts';
 import handlers from '@/common/handlers';
 import { loadScriptIcon } from '@/common/load-script-icon';
-import options from '@/common/options';
 import { render } from '@/common/ui';
 import '@/common/ui/favicon';
 import '@/common/ui/style';
@@ -17,8 +15,8 @@ import App from './views/app';
 const NON_WS_RE = /\S/;
 let updateThrottle;
 
-loadData();
 render(App);
+loadData();
 
 /**
  * @param {UIScript} script
@@ -61,7 +59,8 @@ function initScript(script, sizes, code) {
 }
 
 export function loadData() {
-  const id = +store.route.paths[1];
+  if (__.MV3) sendCmdDirectly('GetInjectorError').then(err => { store.error = err; });
+  const id = (!__.MV3 || !store.busyId) && +store.route.paths[1];
   return requestData(id)
   .catch(id && (() => requestData()));
   /* Catching in order to retry without an id if the id is invalid.
@@ -69,10 +68,9 @@ export function loadData() {
 }
 
 async function requestData(id) {
-  const [data] = await Promise.all([
-    sendCmdDirectly('GetData', { id, sizes: true }, { retry: true }),
-    options.ready,
-  ]);
+  const allData = BGDATA.options;
+  // Using await on the literal data to give Vue a breath to avoid a long white frame
+  const data = await (allData || sendCmdDirectly('GetData', { id, sizes: true }, { retry: true }));
   const { [SCRIPTS]: allScripts, sizes, ...auxData } = data;
   Object.assign(store, auxData); // initScripts needs `cache` in store
   const scripts = [];
@@ -85,7 +83,7 @@ async function requestData(id) {
   // now we can render
   store.scripts = scripts;
   store.removedScripts = removedScripts;
-  if (store.loaded !== 'all') store.loaded = !!id || 'all';
+  if (store.loaded !== 'all') store.loaded = !allData && !!id || 'all';
 }
 
 /**
@@ -106,8 +104,14 @@ function getUniqTags(script, custom = script.custom, meta) {
 }
 
 Object.assign(handlers, {
-  ScriptsUpdated() {
-    loadData();
+  ScriptsSorted(changes) {
+    for (const { props } of /**@type{VMScript[]}*/store.scripts) {
+      const pos = changes[props.id];
+      if (pos != null) props.position = pos;
+    }
+  },
+  SetPermissions(data) {
+    Object.assign(store, data);
   },
   UpdateSync(data) {
     store.sync = data;

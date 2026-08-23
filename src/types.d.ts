@@ -1,4 +1,6 @@
 /* tslint:disable:no-namespace */
+/// <reference types="@violentmonkey/types" />
+/// <reference types="@types/chrome" />
 //#region Generic
 
 declare type NumBool = 0 | 1
@@ -32,36 +34,44 @@ declare namespace GMReq {
   type EventType = keyof XMLHttpRequestEventMap;
   type EventTypeMap = { [name: EventType]: boolean };
   type Response = string | Blob | ArrayBuffer;
-  type UserOpts = VMScriptGMDownloadOptions | VMScriptGMXHRDetails;
+  type UserOpts = VMScriptGMDownloadOptions | VMScriptGMXHRDetails<any>;
   interface BG {
     cb: (data: GMReq.Message.BGAny) => Promise<void>;
+    cbe: (err: string|Error) => Promise<void>;
     /** use browser's `Cookie` header */
     cookie?: boolean;
     /** allow Set-Cookie header to affect browser */
     'set-cookie'?: boolean;
-    coreId: number;
+    coreId: string;
+    dlEvents?: EventTypeMap;
+    dlId?: number;
     /** Firefox-only workaround for CSP blocking a blob: URL */
     fileName: string;
     frame: VMMessageTargetFrame;
     frameId: number;
     id: string;
+    resolve?: (v?: any) => void;
     responseHeaders: string;
+    ruleId?: number;
     storeId: string;
     tabId: number;
+    timer?: number;
     url: string;
     xhr: XMLHttpRequest;
+    xhrUrl: string;
   }
   interface Content {
     chunks?: Uint8Array | string[];
     fileName: string;
     realm: VMScriptInjectInto;
-    response?: Response;
+    /** Used to wait before dispatching events that follow an event that asynchrously imports a binary response */
+    p?: Promise<Blob|ArrayBuffer>;
     xhrType: XMLHttpRequestResponseType;
   }
   interface Web {
     id: string;
     scriptId: number;
-    cb: { [name: EventType]: typeof VMScriptGMXHRDetails.onload }[];
+    cb: { [name: EventType]: VMScriptGMXHRDetails<any>['onload'] }[];
     context?: any;
     raw?: Response;
     response?: Response;
@@ -76,7 +86,7 @@ declare namespace GMReq {
       blobbed: boolean;
       chunked: boolean;
       contentType: string;
-      data: VMScriptResponseObject;
+      data: VMScriptResponseObject<any>;
       id: string;
       type: EventType;
       upload: 0 | 1;
@@ -99,6 +109,7 @@ declare namespace GMReq {
       id: string;
       scriptId: number;
       anonymous: boolean;
+      conflictAction?: chrome.downloads.FilenameConflictAction;
       fileName: string;
       data: any[];
       events: [EventTypeMap, EventTypeMap];
@@ -107,9 +118,11 @@ declare namespace GMReq {
       overrideMimeType?: string;
       password?: string;
       responseType: XMLHttpRequestResponseType;
+      saveAs?: boolean;
       timeout?: number;
       ua?: string[];
-      url: string;
+      /** Blob in Firefox */
+      url: string | Blob;
       user?: string;
       /** responseType to use in the actual XHR */
       xhrType: XMLHttpRequestResponseType;
@@ -140,8 +153,8 @@ declare type VMBadgeData = {
   /** Map: frameId -> number of scripts in this frame */
   frameIds: { [frameId: string]: number };
   icon: string;
-  /** all ids */
-  ids: Set<number>;
+  /** all ids (using an array because chrome.storage.session doesn't support Set */
+  ids: number[];
   /**
    * undefined = after VM started (unknown injectability),
    * null = after tab navigated (unknown injectability),
@@ -166,6 +179,7 @@ declare interface VMScript {
     /** 2 = allow updates and local edits */
     shouldUpdate: NumBool | 2;
     notifyUpdates?: NumBoolNull;
+    noCmdNames: NumBool;
   };
   custom: {
     name?: string;
@@ -352,9 +366,11 @@ declare namespace VMInjection {
     forceContent?: boolean;
     inject: VMInjection;
     more: EnvDelayed;
+    url?: string;
   }
   interface Info {
     gmi: {
+      downloadMode: 'browser' | 'native';
       isIncognito: boolean;
     };
     ua: VMScriptGMInfoPlatform;
@@ -404,23 +420,19 @@ declare namespace VMReq {
     /** truthy = multi script update, 'auto' = autoUpdate, falsy = single */
     multi?: boolean | 'auto';
   }
-  type Response = {
+  type Response = (ResponseOK | Error) & {
     url: string;
     status: number;
-  } & (ResponseOK | ResponseError);
+  };
   type ResponseOK = {
     headers: Headers;
     data: string | ArrayBuffer | Blob | PlainJSONValue;
-  };
-  type ResponseError = {
-    message: string;
   };
 }
 
 declare type VMSearchOptions = {
   reversed?: boolean;
   wrapAround?: boolean;
-  reuseCursor?: boolean;
   pos?: { line: number, ch: number };
 }
 
@@ -445,4 +457,26 @@ declare type VMMessageTargetFrame = { frameId?: number } | { documentId?: string
  */
 declare type VMTopRenderMode = 0 | 1 | 2 | 3 | 4;
 
+declare var __: {
+  BG: boolean,
+  CODEMIRROR_THEMES: string;
+  DEBUG: boolean,
+  DEV: boolean,
+  /** An extension context with full access to chrome API i.e. not offscreen, content */
+  EXT: boolean,
+  MV3: boolean;
+  INIT_FUNC_NAME: string;
+  INJECTED: string | false;
+  SW: boolean;
+  SW_CLIENT: boolean;
+  SYNC_DROPBOX_CLIENT_ID: string,
+  SYNC_GOOGLE_DESKTOP_ID: string,
+  SYNC_GOOGLE_DESKTOP_SECRET: string,
+  SYNC_ONEDRIVE_ACCOUNT_TYPE: string,
+  SYNC_ONEDRIVE_CLIENT_ID: string,
+  TEST: boolean,
+  VM_VER: string,
+};
+
+declare const regex: import('regex').RegexTag<RegExp>;
 //#endregion Generic

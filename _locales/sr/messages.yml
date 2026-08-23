@@ -63,6 +63,9 @@ buttonInstallOptions:
 buttonNew:
   description: Button to create a new script.
   message: Нова скрипта
+buttonNewFromFile:
+  description: Button to create a new script from a local file.
+  message: ''
 buttonOK:
   description: OK button on dialog.
   message: У реду
@@ -216,7 +219,7 @@ editLongLineTooltip:
     Овај ред је предугачак па је његов текст скупљен да би се избегла кашњења
     приликом уређивања.
 
-    Можете подесити ограничење у напредним подешавањима, на пример: 
+    Можете подесити ограничење у напредним подешавањима, на пример:
 
     „maxDisplayLength“: 20000
 editNavCode:
@@ -259,6 +262,9 @@ failureReasonRestarted:
     корисничке скрипте.
 fileInstallBlocked:
   description: Text in the installer when a local file is dropped into the browser window.
+  message: ''
+fileInstallBlockedFF:
+  description: Text in the installer when a local file is dropped into Firefox window.
   message: ''
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
@@ -314,7 +320,7 @@ headerRecycleBin:
   message: Отпад
 helpForLocalFile:
   description: Label of the checkbox.
-  message: Прикажи упутство за повучене и испуштене локалне скрипте.
+  message: ''
 hintForBatchAction:
   description: Hint shown next to the buttons for batch actions.
   message: за $1 одговарајуће скрипте
@@ -457,18 +463,41 @@ labelExportScriptData:
 labelExposeStatus:
   description: Option in advanced settings.
   message: Изложите инсталирану верзију на сајтовима каталога корисничких скрипта:$1
-labelFastFirefoxInject:
+labelFastInject:
   description: (`$1` will be shown as `page`) Option in Advanced settings.
-  message: Алтернативни режим $1 у Firefox-у
-labelFastFirefoxInjectHint:
+  message: Алтернативни режим $1
+labelFastInjectHint:
   description: Tooltip hint for the option in Advanced settings.
   message: ''
 labelFeedback:
   description: Label of link to feedback page.
   message: Повратне информације
+labelFirefoxPatchCsp:
+  description: Option in Advanced settings.
+  message: ''
+labelFirefoxPatchCspHint:
+  description: >-
+    (`$1` will be shown as <page>, $2 is <wrappedJSObject>) Hint for the option
+    in Advanced settings.
+  message: ''
+labelFirefoxPatchCspPopup:
+  description: >-
+    ($1 is <content>, $2 is a translation for "Bypass CSP") Message for a script
+    in the popup's extras menu.
+  message: ''
 labelGeneral:
   description: Label for general settings.
   message: Опште
+  touched: false
+labelGmDownloadViaApi:
+  description: Option in Advanced settings to use the browser download API for GM_download.
+  message: ''
+labelGmDownloadViaApiHint:
+  description: Tooltip for the browser download option in Advanced settings.
+  message: ''
+labelGrantPermission:
+  description: Button to request the API permission.
+  message: ''
 labelHelpTranslate:
   description: Label for link to localization guide in about tab
   message: Помоћ у преводу
@@ -692,6 +721,9 @@ learnBlacklist:
 learnInjectionMode:
   description: Refers to a link to introduce injection modes.
   message: Сазнајте више о режимима убризгавања.
+linkManageRemoteFiles:
+  description: Label for link to manage remote files.
+  message: ''
 menuCommands:
   description: Menu item to list script commands.
   message: Команде скрипте
@@ -1062,6 +1094,12 @@ updateScriptsAll:
 updateScriptsInTab:
   description: Command/button to update scripts that run in current tab.
   message: Ажурирајте скрипте тренутне картице
+userScriptsPermissionNote:
+  description: Text in the popup or dashboard.
+  message: ''
+userScriptsPermissionNoteOld:
+  description: Text in the popup or dashboard in older browsers.
+  message: ''
 valueLabelKey:
   description: Label for key of a script value.
   message: Кључ (жица/стринг)

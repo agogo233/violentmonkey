@@ -3,11 +3,10 @@ import { addPublicCommands } from './init';
 import { getOption } from './options';
 import { scriptMap } from './script';
 import { testScript } from './tester';
-import { FIREFOX } from './ua';
 import { vetUrl } from './url';
 
 const MUST_MATCH = `Script must match/include `;
-const FIRST_PARTY = FIREFOX >= 59;
+const FIRST_PARTY = IS_FIREFOX;
 
 addPublicCommands({
   /**

@@ -63,6 +63,9 @@ buttonInstallOptions:
 buttonNew:
   description: Button to create a new script.
   message: Nowy skrypt
+buttonNewFromFile:
+  description: Button to create a new script from a local file.
+  message: "Nowy z\_pliku"
 buttonOK:
   description: OK button on dialog.
   message: OK
@@ -104,10 +107,10 @@ buttonSupport:
   message: Strona wsparcia technicznego
 buttonSyncPullOnce:
   description: Button to sync scripts from remote to local for once
-  message: ''
+  message: Pobierz raz na lokalny
 buttonSyncPushOnce:
   description: Button to sync scripts from local to remote for once
-  message: ''
+  message: Wypchnij raz na zdalny
 buttonUndo:
   description: Button to undo removement of a script.
   message: Cofnij
@@ -149,14 +152,10 @@ descBlacklist:
   message: Czarna lista wstrzykiwań (skrypty nie będą działać w pasujących witrynach)
 descBlacklistNet:
   description: Description for the global network blacklist.
-  message: >-
-    Czarna lista sieci (skrypty nie będą łączyć się z pasującymi witrynami i ich
-    plikami cookie)
+  message: "Czarna lista sieci (skrypty nie będą łączyć się z\_pasującymi witrynami i\_ich plikami ciasteczek)"
 descCustomCSS:
   description: Description of custom CSS section.
-  message: >-
-    Niestandardowy CSS dla stron z opcjami i instalacją skryptu. Jeśli nie
-    jesteś pewien/pewna co to jest, to nie edytuj tego.
+  message: "Niestandardowy CSS dla stron z\_opcjami i\_instalacją skryptu. Jeśli nie masz pewności, do czego służy, nie edytuj tego."
 descEditorOptions:
   description: Description of editor options JSON section.
   message: >-
@@ -184,7 +183,7 @@ descScriptTemplate:
   description: Description of script template section.
   message: >-
     Obsługiwane zmienne: <{{name}}>, <{{url}}>, <{{icon}}>, <{{date}}>,
-    <{{date:format}}> w formacie zgodnym z MomentJS, np <{{date:YYYY-MM-DD}}>.
+    <{{date:format}}> w formacie zgodnym z MomentJS, np. <{{date:YYYY-MM-DD}}>.
 disabledScriptsGroup:
   description: 'Used as "Disabled scripts: group"'
   message: grupuj
@@ -207,7 +206,7 @@ editHelpKeyboard:
   message: 'Skróty klawiaturowe:'
 editHowToHint:
   description: The text of the how-to link in the editor header.
-  message: Użycie innego edytora?
+  message: Użyć innego edytora?
 editLabelMeta:
   description: Metadata section in settings tab of script editor.
   message: Niestandardowe metadane
@@ -252,16 +251,12 @@ extName:
   message: Violentmonkey
 failureReasonBlacklisted:
   description: Shown for blacklisted URLs (in the extension icon tooltip, in the popup)
-  message: ' Zablokowano w czarnej liście w ustawieniach Violentmonkey''a'
+  message: Dodano do czarnej listy w ustawieniach Violentmonkey
 failureReasonNoninjectable:
   description: >-
     Shown for URLs that cannot be processed (same places as
     failureBlacklistedUrl)
-  message: >-
-    Violentmonkey nie może uruchamiać skryptów użytkownika na tej stronie
-
-    (pospolite przykłady: interfejs przeglądarki, rozszerzenia, zablokowane
-    przez zasady, strona wyszukiwarki w Operze)
+  message: "Violentmonkey nie może uruchamiać skryptów użytkownika na tej stronie\n(typowe przykłady: interfejs przeglądarki, rozszerzenia, zablokowane przez zasady, strona wyszukiwarki w\_Operze)"
 failureReasonRestarted:
   description: Shown in the popup.
   message: >-
@@ -277,6 +272,11 @@ fileInstallBlocked:
     szczegółach rozszerzenia Violentmonkey na stronie chrome://extensions. Jest
     to ryzykowne, ponieważ każdy skrypt użytkownika będzie mógł odczytywać
     lokalne pliki.
+fileInstallBlockedFF:
+  description: Text in the installer when a local file is dropped into Firefox window.
+  message: >-
+    Otwórz about:addons, kliknij „Violentmonkey”, kliknij „Uprawnienia i dane”,
+    włącz „Dostęp do lokalnych plików na tym komputerze”.
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: alfabetycznie
@@ -290,10 +290,10 @@ filterLastVisitOrder:
   description: >-
     Label for option to sort scripts by the last time the user visited any site
     targeted by this script.
-  message: ''
+  message: według data ostatniej wizyty
 filterLastVisitOrderTooltip:
   description: Tooltip for option to sort scripts.
-  message: ''
+  message: Data ostatniej wizyty na dowolnej stronie objętej działaniem tego skryptu.
 filterScopeAll:
   description: Option in dashboard's search scope filter.
   message: Wszędzie
@@ -331,18 +331,24 @@ headerRecycleBin:
   message: Kosz
 helpForLocalFile:
   description: Label of the checkbox.
-  message: Pokaż instrukcję dotyczącą przeciągania i upuszczania lokalnych skryptów
+  message: Pokaż pomoc, gdy nie można zainstalować skryptu lokalnego
 hintForBatchAction:
   description: Hint shown next to the buttons for batch actions.
   message: dla $1 pasujących skryptów
 hintGrantNone:
   description: Don't translate back-quoted terms.
-  message: ''
+  message: '`@grant none` wyłącza wszystkie inne klucze `@grant`.'
 hintGrantless:
   description: >-
     1) This is a tooltip so preserve the line breaks to ensure it's not too
     wide. 2) Don't translate back-quoted terms like `window` or `@grant none`.
-  message: ''
+  message: >-
+    Skrypt w trybie piaskownicy nie może zmienić następujących właściwości
+    globalnych: $1.
+
+    Aby naprawić skrypt, dodaj `@grant none`, aby wyłączyć piaskownicę,
+
+    lub użyj `unsafeWindow` zamiast `window`.
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
   message: 'Wprowadź adres URL:'
@@ -398,7 +404,7 @@ labelAutoReloadCurrentTabDisabled:
   touched: false
 labelAutoUpdate:
   description: Option to allow automatically checking scripts for updates
-  message: Sprawdzaj aktualizacje skryptów co  $1 dni, użyj 0 aby wyłączyć
+  message: Sprawdzaj aktualizacje skryptów co $1 dni; użyj 0, aby wyłączyć
 labelBackup:
   description: Label of the import/export section in settings.
   message: Kopia zapasowa
@@ -425,7 +431,7 @@ labelBlacklist:
   message: Czarna lista
 labelComment:
   description: Label for a comment text in the script editor settings.
-  message: ''
+  message: Komentarz
 labelContributors:
   description: Label for link to contributors.
   message: Współtwórcy
@@ -476,37 +482,70 @@ labelExposeStatus:
   message: >-
     Pokazuj informację o obecnie zainstalowanej wersji skryptu na jego stronie
     listingu w katalogach: $1
-labelFastFirefoxInject:
+labelFastInject:
   description: (`$1` will be shown as `page`) Option in Advanced settings.
-  message: Alternatywny tryb $1 w Firefoxie
-labelFastFirefoxInjectHint:
+  message: Alternatywny tryb $1
+labelFastInjectHint:
   description: Tooltip hint for the option in Advanced settings.
   message: >-
-    Alternatywna metoda wstrzykiwania <document-start> skryptów od Firefoxa
-    wersji 59, szybsza niż tryb domyślny. Podobnie jak „Tryb strony
-    synchronicznej”, zwiększa on również zużycie pamięci, więc możesz go
-    wyłączyć, jeśli Twoje skrypty działają poprawnie bez tej opcji.
+    Alternatywna metoda wstrzykiwania <document-start> skryptów, szybsza niż
+    tryb domyślny. Podobnie jak „Tryb strony synchronicznej”, zwiększa on
+    również zużycie pamięci, więc możesz go wyłączyć, jeśli Twoje skrypty
+    działają poprawnie bez tej opcji.
 labelFeedback:
   description: Label of link to feedback page.
   message: Informacje zwrotne
+labelFirefoxPatchCsp:
+  description: Option in Advanced settings.
+  message: Omiń CSP w Firefoksie
+labelFirefoxPatchCspHint:
+  description: >-
+    (`$1` will be shown as <page>, $2 is <wrappedJSObject>) Hint for the option
+    in Advanced settings.
+  message: >-
+    Dodaje losową wartość do CSP stron internetowych, której może używać tylko
+    Violentmonkey do uruchamiania skryptów w trybie wstrzykiwania $1, w
+    przeciwnym razie trzeba będzie edytować skrypty, aby używać $2.
+labelFirefoxPatchCspPopup:
+  description: >-
+    ($1 is <content>, $2 is a translation for "Bypass CSP") Message for a script
+    in the popup's extras menu.
+  message: Izolowany tryb $1 może ograniczać funkcjonalność, zobacz „$2” w opcjach.
 labelGeneral:
   description: Label for general settings.
   message: Ogólne
+  touched: false
+labelGmDownloadViaApi:
+  description: Option in Advanced settings to use the browser download API for GM_download.
+  message: Użyj interfejsu API przeglądarki do pobierania
+labelGmDownloadViaApiHint:
+  description: Tooltip for the browser download option in Advanced settings.
+  message: >-
+    Umożliwia skryptom zapisywanie plików w podfolderach wewnątrz katalogu
+    pobranych plików i wyświetlanie postępu pobierania na pasku pobierania
+    przeglądarki.
+labelGrantPermission:
+  description: Button to request the API permission.
+  message: Udziel uprawnienia
 labelHelpTranslate:
   description: Label for link to localization guide in about tab
   message: Pomóż w tłumaczeniu
 labelHomepage:
   description: Label for home page in about tab.
-  message: Strona domowa
+  message: Strona główna
 labelHomepageURL:
   description: Label of script @homepageURL in custom meta data.
   message: 'Adres URL strony głównej:'
 labelHttpOnlyCookie:
   description: Option in Advanced settings to enable HTTP-only cookies for GM_cookie.
-  message: ''
+  message: Zezwól GM_cookie na dostęp do plików ciasteczek tylko HTTP
 labelHttpOnlyCookieHint:
   description: Tooltip for the HTTP-only cookie option.
-  message: ''
+  message: >-
+    Po włączeniu skrypty mogą odczytywać i zapisywać pliki ciasteczek z flagą
+    tylko HTTP. Umożliwia to skryptom dostęp do plików ciasteczek, do których
+    nie można uzyskać dostępu za pośrednictwem JavaScript. Używaj ostrożnie,
+    ponieważ może to stanowić zagrożenie dla bezpieczeństwa.
 labelIconURL:
   description: Label for the input.
   message: 'Adres URL ikony:'
@@ -567,7 +606,7 @@ labelNotifyUpdatesGlobal:
     edytorze)
 labelPageMenuCommands:
   description: Checkbox item in page context menu and option to enable script commands.
-  message: ''
+  message: Pokaż polecenia skryptu w menu strony
 labelPrivacyPolicy:
   description: Label of link to privacy policy
   message: Polityka prywatności
@@ -593,10 +632,10 @@ labelRunAtDefault:
   message: (domyślny)
 labelScriptOptionRequired:
   description: Shown after some global options in settings
-  message: ''
+  message: (tylko dla skryptów z włączoną tą opcją w ich ustawieniach)
 labelScriptOptionRequiredGlobal:
   description: Shown after some options in a script's settings
-  message: ''
+  message: (opcja ta musi być także włączona w ustawieniach globalnych)
 labelScriptTemplate:
   description: Label for custom script template.
   message: Niestandardowy szablon skryptu
@@ -614,7 +653,7 @@ labelShowOrder:
   message: Pokaż kolejność wykonywania
 labelShowVisited:
   description: Label for option in dashboard -> script list
-  message: ''
+  message: Pokaż czas ostatniej wizyty
 labelSync:
   description: Label for sync options.
   message: Synchronizacja
@@ -629,7 +668,7 @@ labelSyncAuthorizing:
   message: Autoryzacja
 labelSyncAutomatically:
   description: Label for option to sync automatically.
-  message: ''
+  message: Synchronizuj automatycznie
 labelSyncDisabled:
   description: Label for option to disable sync service.
   message: Żaden
@@ -645,22 +684,22 @@ labelSyncRevoke:
   message: Unieważnij
 labelSyncS3AccessKeyId:
   description: Label for S3 access key ID input.
-  message: ''
+  message: 'Identyfikator klucza dostępu:'
 labelSyncS3Bucket:
   description: Label for S3 bucket name input.
-  message: ''
+  message: 'Kontener: '
 labelSyncS3Endpoint:
   description: Label for custom S3-compatible endpoint URL input (leave blank for AWS).
-  message: ''
+  message: 'Własny punkt końcowy:'
 labelSyncS3Prefix:
   description: Label for S3 key prefix input (folder within the bucket).
-  message: ''
+  message: 'Przedrostek klucza:'
 labelSyncS3Region:
   description: Label for S3 region input.
-  message: ''
+  message: 'Region: '
 labelSyncS3SecretAccessKey:
   description: Label for S3 secret access key input.
-  message: ''
+  message: 'Tajny klucz dostępu:'
 labelSyncScriptStatus:
   description: Label for option to sync script status.
   message: Synchronizuj stan skryptu
@@ -724,6 +763,9 @@ learnBlacklist:
 learnInjectionMode:
   description: Refers to a link to introduce injection modes.
   message: Dowiedz się więcej o trybach wstrzykiwania.
+linkManageRemoteFiles:
+  description: Label for link to manage remote files.
+  message: Zarządzaj zdalnymi plikami
 menuCommands:
   description: Menu item to list script commands.
   message: Komendy skryptu
@@ -974,7 +1016,7 @@ optionPopupShowDisabled:
   touched: false
 optionShowEnabledFirst:
   description: Option to show enabled scripts first in alphabetical order.
-  message: Pokazuj najpierw włączone skrypty
+  message: Pokaź najpierw włączone skrypty
 optionUiTheme:
   description: Label for the theme selector in Advanced settings.
   message: 'Motyw interfejsu:'
@@ -1045,13 +1087,13 @@ sideMenuInstalled:
   message: Zainstalowane skrypty
 sideMenuScripts:
   description: 'Side menu: Scripts'
-  message: ''
+  message: Scripts
 sideMenuSettings:
   description: 'Side menu: Settings'
   message: Ustawienia
 skipScripts:
   description: Title of the hotkey in the browser UI for customizing the hotkeys.
-  message: Odśwież stronę pomijając skrypty
+  message: Odśwież stronę, pomijając skrypty
 skipScriptsMsg:
   description: Message shown in the popup if the tab was reloaded without scripts.
   message: >-
@@ -1065,7 +1107,7 @@ stopTracking:
   message: Przestań śledzić
 titleBadgeColor:
   description: Tooltip for option to set badge color.
-  message: Kolor normalnej odznaki
+  message: Kolor normalnej plakietki
 titleBadgeColorBlocked:
   description: Tooltip for option to set badge color of non-injectable tabs.
   message: >-
@@ -1119,16 +1161,24 @@ updateScript:
   message: Aktualizuj
 updateScriptForced:
   description: Tooltip for the update icon.
-  message: ''
+  message: >-
+    Kliknij prawym przyciskiem myszy lub przytrzymaj, aby wymusić aktualizację,
+    w tym zależności
 updateScriptsAll:
   description: Command/button to update all scripts.
   message: Zaktualizuj wszystkie skrypty
 updateScriptsInTab:
   description: Command/button to update scripts that run in current tab.
   message: Zaktualizuj skrypty bieżącej karty
+userScriptsPermissionNote:
+  description: Text in the popup or dashboard.
+  message: "Włącz opcję „Zezwalaj na skrypty użytkownika” w\_szczegółach Violentmonkey w\_chrome://extensions i\_odśwież kartę"
+userScriptsPermissionNoteOld:
+  description: Text in the popup or dashboard in older browsers.
+  message: "Włącz „Tryb dewelopera” w\_chrome://extensions i\_odśwież kartę"
 valueLabelKey:
   description: Label for key of a script value.
-  message: Klucz (string)
+  message: Klucz (ciąg)
 valueLabelValue:
   description: Label for value of a script value.
   message: Wartość (serializowana jako JSON)
@@ -1137,10 +1187,10 @@ valueLabelValueAll:
   message: Wszystkie wartości (serializowane jako JSON)
 valueLabelValueOr:
   description: $1 is "[x] string"
-  message: ''
+  message: Wartość (serializowana jako JSON lub $1)
 valueLabelValueString:
   description: '$1 is the checkbox: "Value (serialized as JSON or [x] string)"'
-  message: ''
+  message: ciąg $1
 visitWebsite:
   description: Label for link to open Violentmonkey website.
   message: Odwiedź stronę internetową rozszerzenia

@@ -63,6 +63,9 @@ buttonInstallOptions:
 buttonNew:
   description: Button to create a new script.
   message: Nuovo
+buttonNewFromFile:
+  description: Button to create a new script from a local file.
+  message: ''
 buttonOK:
   description: OK button on dialog.
   message: OK
@@ -280,6 +283,9 @@ fileInstallBlocked:
     a URL di file" nei dettagli di Violentmonkey nella pagina
     chrome://extensions. Questo è pericoloso perché qualsiasi userscript può
     leggere qualsiasi file locale.
+fileInstallBlockedFF:
+  description: Text in the installer when a local file is dropped into Firefox window.
+  message: ''
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: alfabetico
@@ -332,9 +338,7 @@ headerRecycleBin:
   message: Cestino
 helpForLocalFile:
   description: Label of the checkbox.
-  message: >-
-    Mostra le istruzioni per gli script locali che vengono trascinati nella
-    finestra di Violentmonkey
+  message: ''
 hintForBatchAction:
   description: Hint shown next to the buttons for batch actions.
   message: per $1 script corrispondenti
@@ -481,22 +485,45 @@ labelExportScriptData:
 labelExposeStatus:
   description: Option in advanced settings.
   message: 'Esponi la versione installata sui siti catalogo di script utente: $1'
-labelFastFirefoxInject:
+labelFastInject:
   description: (`$1` will be shown as `page`) Option in Advanced settings.
-  message: Modalità alternativa $1 in Firefox
-labelFastFirefoxInjectHint:
+  message: Modalità alternativa $1
+labelFastInjectHint:
   description: Tooltip hint for the option in Advanced settings.
   message: >-
-    Una modalità alternativa di iniezione per <document-start> gli script da
-    Firefox 59, più veloce di quella predefinita. Così come "Modalità a pagina
-    sincrona" aumenta anche il consumo di memoria, quindi potresti volerla
-    disattivare se i tuoi script funzionano bene senza questa opzione.
+    Una modalità alternativa di iniezione per <document-start> gli script, più
+    veloce di quella predefinita. Così come "Modalità a pagina sincrona" aumenta
+    anche il consumo di memoria, quindi potresti volerla disattivare se i tuoi
+    script funzionano bene senza questa opzione.
 labelFeedback:
   description: Label of link to feedback page.
   message: Segnala problemi o invia un tuo parere
+labelFirefoxPatchCsp:
+  description: Option in Advanced settings.
+  message: ''
+labelFirefoxPatchCspHint:
+  description: >-
+    (`$1` will be shown as <page>, $2 is <wrappedJSObject>) Hint for the option
+    in Advanced settings.
+  message: ''
+labelFirefoxPatchCspPopup:
+  description: >-
+    ($1 is <content>, $2 is a translation for "Bypass CSP") Message for a script
+    in the popup's extras menu.
+  message: ''
 labelGeneral:
   description: Label for general settings.
   message: Generali
+  touched: false
+labelGmDownloadViaApi:
+  description: Option in Advanced settings to use the browser download API for GM_download.
+  message: ''
+labelGmDownloadViaApiHint:
+  description: Tooltip for the browser download option in Advanced settings.
+  message: ''
+labelGrantPermission:
+  description: Button to request the API permission.
+  message: ''
 labelHelpTranslate:
   description: Label for link to localization guide in about tab
   message: Aiuta a tradurre
@@ -727,6 +754,9 @@ learnBlacklist:
 learnInjectionMode:
   description: Refers to a link to introduce injection modes.
   message: Scopri di più sulle modalità di iniezione.
+linkManageRemoteFiles:
+  description: Label for link to manage remote files.
+  message: ''
 menuCommands:
   description: Menu item to list script commands.
   message: Comandi script
@@ -1134,6 +1164,12 @@ updateScriptsAll:
 updateScriptsInTab:
   description: Command/button to update scripts that run in current tab.
   message: Aggiorna gli script della scheda attuale
+userScriptsPermissionNote:
+  description: Text in the popup or dashboard.
+  message: ''
+userScriptsPermissionNoteOld:
+  description: Text in the popup or dashboard in older browsers.
+  message: ''
 valueLabelKey:
   description: Label for key of a script value.
   message: Chiave (stringa)

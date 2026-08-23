@@ -11,10 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v1 # v1 keeps tags
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 250 # for `action-helper`
-          # persist-credentials: false # not implemented in v1
+          fetch-depth: 100 # for git history in release info
+          fetch-tags: true
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
@@ -23,7 +25,7 @@ jobs:
           node-version-file: 'package.json'
 
       - name: Prepare
-        run: pnpm i && node scripts/action-helper.js
+        run: pnpm ci && node scripts/action-helper.js
         env:
           ACTION_BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
@@ -49,19 +51,32 @@ jobs:
           # Build for release, also upload to GitHub assets
           pnpm build
           # Build one more time to make sure the output is the same
-          mv dist $TEMP_DIR/dist && pnpm build && diff -qr dist $TEMP_DIR/dist
+          # mv dist $TEMP_DIR/dist && pnpm build && diff -qr dist $TEMP_DIR/dist
 
+      - name: Zip
+        run: |
           cd dist && zip -r ../$ASSETS_DIR/$ASSET_ZIP . && cd ..
-
-          # Build for CWS beta, append `BETA` to version name
-          # Same as `BETA=1 pnpm build` but only manifest is changed by now
-          BETA=1 npx gulp manifest
-          cd dist && zip -r ../$TEMP_DIR/$ASSET_CWS_BETA_ZIP . && cd ..
 
           # Build for AMO unlisted, append `BETA` to version name and set update_url for FF
           # Same as `pnpm build:selfHosted` but only manifest is changed by now
           TARGET=selfHosted BETA=1 npx gulp manifest
           cd dist && zip -r ../$TEMP_DIR/$ASSET_SELF_HOSTED_ZIP . && cd ..
+
+      - run: pnpm build:mv3
+        env:
+          SYNC_DROPBOX_CLIENT_ID: ${{ secrets.SYNC_DROPBOX_CLIENT_ID }}
+          SYNC_GOOGLE_DESKTOP_ID: ${{ secrets.SYNC_GOOGLE_DESKTOP_ID }}
+          SYNC_GOOGLE_DESKTOP_SECRET: ${{ secrets.SYNC_GOOGLE_DESKTOP_SECRET }}
+          SYNC_ONEDRIVE_CLIENT_ID: ${{ secrets.SYNC_ONEDRIVE_CLIENT_ID }}
+
+      - name: Zip MV3
+        run: |
+          cd dist-mv3 && zip -r ../$ASSETS_DIR/$ASSET_CWS_ZIP . && cd ..
+
+          # Build for CWS beta, append `BETA` to version name
+          # Same as `BETA=1 pnpm build` but only manifest is changed by now
+          BETA=1 MV3=1 npx gulp manifest
+          cd dist-mv3 && zip -r ../$TEMP_DIR/$ASSET_CWS_BETA_ZIP . && cd ..
 
       - name: Publish to AMO
         continue-on-error: true
@@ -76,6 +91,7 @@ jobs:
           if ! node scripts/amo-upload.mjs 2>"$TEMP_DIR/stderr.log"; then
             export ERROR=$(cat "$TEMP_DIR/stderr.log" 2>/dev/null || true)
             ERROR="${ERROR:-AMO publish failed}"
+            echo "$ERROR"
           fi
           export TARGET=AMO
           node scripts/notify-release.mjs
@@ -93,7 +109,7 @@ jobs:
           if [ "$PRERELEASE" != "true" ]; then
             echo Publish release
             CWS_EXT_ID=$EXTENSION_ID_RELEASE
-            CWS_SOURCE=$ASSETS_DIR/$ASSET_ZIP
+            CWS_SOURCE=$ASSETS_DIR/$ASSET_CWS_ZIP
           else
             echo Publish prerelease
             CWS_EXT_ID=$EXTENSION_ID_BETA
@@ -102,6 +118,7 @@ jobs:
           if ! npx chrome-webstore-upload-cli@4 --extension-id $CWS_EXT_ID --source $CWS_SOURCE 2>"$TEMP_DIR/stderr.log"; then
             export ERROR=$(cat "$TEMP_DIR/stderr.log" 2>/dev/null || true)
             ERROR="${ERROR:-CWS publish failed}"
+            echo "$ERROR"
 
             # Ignore pending review error: "❌ You may not edit or publish an item that is in review."
             if [[ "$ERROR" == *"is in review"* ]]; then

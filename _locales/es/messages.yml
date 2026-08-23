@@ -63,6 +63,9 @@ buttonInstallOptions:
 buttonNew:
   description: Button to create a new script.
   message: Nuevo
+buttonNewFromFile:
+  description: Button to create a new script from a local file.
+  message: ''
 buttonOK:
   description: OK button on dialog.
   message: OK
@@ -281,6 +284,9 @@ fileInstallBlocked:
     acceso a las URL del archivo” en los detalles de Violentmonkey en la página
     chrome://extensions. Esto es peligroso, ya que cualquier userscript podría
     leer cualquier archivo local.
+fileInstallBlockedFF:
+  description: Text in the installer when a local file is dropped into Firefox window.
+  message: ''
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: orden alfabético
@@ -335,7 +341,7 @@ headerRecycleBin:
   message: Papelera de reciclaje
 helpForLocalFile:
   description: Label of the checkbox.
-  message: Mostrar las instrucciones para scripts locales arrastrados y soltados
+  message: ''
 hintForBatchAction:
   description: Hint shown next to the buttons for batch actions.
   message: para $1 scripts coincidentes
@@ -483,22 +489,47 @@ labelExportScriptData:
 labelExposeStatus:
   description: Option in advanced settings.
   message: 'Exponer la versión instalada en los sitios del catálogo de userscripts: $1'
-labelFastFirefoxInject:
+labelFastInject:
   description: (`$1` will be shown as `page`) Option in Advanced settings.
-  message: Modo $1 alternativo en Firefox
-labelFastFirefoxInjectHint:
+  message: Modo $1 alternativo
+labelFastInjectHint:
   description: Tooltip hint for the option in Advanced settings.
   message: >-
-    Un método de inyección alternativo para scripts <document-start> disponible
-    desde Firefox 59, más rápido que el modo predeterminado. Al igual que el
-    "modo page sincrónico", también incrementa el uso de memoria, por lo que
-    podrías desactivarlo si tus scripts funcionan correctamente sin esta opción.
+    Un método de inyección alternativo para scripts <document-start> disponible,
+    más rápido que el modo predeterminado. Al igual que el "modo page
+    sincrónico", también incrementa el uso de memoria, por lo que podrías
+    desactivarlo si tus scripts funcionan correctamente sin esta opción.
 labelFeedback:
   description: Label of link to feedback page.
   message: Comentarios
+labelFirefoxPatchCsp:
+  description: Option in Advanced settings.
+  message: ''
+labelFirefoxPatchCspHint:
+  description: >-
+    (`$1` will be shown as <page>, $2 is <wrappedJSObject>) Hint for the option
+    in Advanced settings.
+  message: ''
+labelFirefoxPatchCspPopup:
+  description: >-
+    ($1 is <content>, $2 is a translation for "Bypass CSP") Message for a script
+    in the popup's extras menu.
+  message: ''
 labelGeneral:
   description: Label for general settings.
   message: General
+  touched: false
+labelGmDownloadViaApi:
+  description: Option in Advanced settings to use the browser download API for GM_download.
+  message: Usar API de descargas del navegador
+labelGmDownloadViaApiHint:
+  description: Tooltip for the browser download option in Advanced settings.
+  message: >-
+    Permite a los scripts guardar archivos en subcarpetas dentro del directorio
+    de descargas y muestra el progreso en la barra de descargas del navegador.
+labelGrantPermission:
+  description: Button to request the API permission.
+  message: Conceder permiso
 labelHelpTranslate:
   description: Label for link to localization guide in about tab
   message: Ayudar con la traducción
@@ -593,7 +624,7 @@ labelRemovedAt:
   message: Eliminado el $1
 labelReplace:
   description: Label for replace input in search box.
-  message: 'Remplazar con:'
+  message: 'Reemplazar con:'
 labelRunAt:
   description: Label of script @run-at properties in custom meta data.
   message: 'Ejecutar en:'
@@ -734,6 +765,9 @@ learnBlacklist:
 learnInjectionMode:
   description: Refers to a link to introduce injection modes.
   message: Aprende más sobre los modos de inyección.
+linkManageRemoteFiles:
+  description: Label for link to manage remote files.
+  message: Administrar archivos remotos
 menuCommands:
   description: Menu item to list script commands.
   message: ''
@@ -1058,7 +1092,7 @@ sideMenuInstalled:
   message: Scripts instalados
 sideMenuScripts:
   description: 'Side menu: Scripts'
-  message: ''
+  message: Scripts
 sideMenuSettings:
   description: 'Side menu: Settings'
   message: Configuración
@@ -1141,6 +1175,12 @@ updateScriptsAll:
 updateScriptsInTab:
   description: Command/button to update scripts that run in current tab.
   message: Actualizar scripts de la pestaña actual
+userScriptsPermissionNote:
+  description: Text in the popup or dashboard.
+  message: ''
+userScriptsPermissionNoteOld:
+  description: Text in the popup or dashboard in older browsers.
+  message: ''
 valueLabelKey:
   description: Label for key of a script value.
   message: Clave (cadena)

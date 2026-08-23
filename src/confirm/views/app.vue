@@ -120,7 +120,7 @@ import {
   debounce, getFullUrl, getLocaleString, getScriptHome, i18n, isRemote, makePause, sendCmdDirectly,
   trueJoin,
 } from '@/common';
-import { keyboardService, modifiers } from '@/common/keyboard';
+import { keyboardService, isMacintosh } from '@/common/keyboard';
 import initCache from '@/common/cache';
 import { loadScriptIcon } from '@/common/load-script-icon';
 import { deepEqual, objectPick } from '@/common/object';
@@ -134,7 +134,7 @@ const KEEP_INFO_DELAY = 5000;
 const RETRY_DELAY = 3000;
 const RETRY_COUNT = 2;
 const MAX_TITLE_NAME_LEN = 100;
-const CONFIRM_HOTKEY = `${modifiers.ctrlcmd === 'm' ? '⌘' : 'Ctrl-'}Enter`;
+const CONFIRM_HOTKEY = `${isMacintosh ? '⌘' : 'Ctrl-'}Enter`;
 const DROP_PREFIX = `file:///*drag-n-drop*/`;
 const cache = initCache({ lifetime: RETRY_DELAY * (RETRY_COUNT + 1) });
 const labelDefault = i18n('labelRunAtDefault');
@@ -214,13 +214,18 @@ onMounted(async () => {
   Object.defineProperty(window, FSH, { set: loadNewFileHandle });
   infoVal = info.value = fileHandle
     ? { url: fileHandle._url || DROP_PREFIX + fileHandle.name }
-    : await sendCmdDirectly('CacheLoad', key);
+    : await sendCmdDirectly('CacheLoad', key) || false/* for `info.XXX` in the template */;
   if (!infoVal) {
     closeTab();
     return;
   }
   if (infoVal.fs) {
-    info.value.fs = i18n('fileInstallBlocked').split(/<\d+>/);
+    const parts = i18n('fileInstallBlocked').split(/<\d+>/);
+    if (IS_FIREFOX) {
+      parts[1] = i18n('fileInstallBlockedFF'); // replace drag'n'drop part
+      parts.pop(); // drop chrome://extensions part
+    }
+    info.value.fs = parts;
     return;
   }
   if (!fileHandle) {
@@ -386,7 +391,11 @@ async function loadDeps() {
   }
 }
 function closeTab() {
-  sendCmdDirectly('TabClose');
+  if (__.MV3 && history.length) {
+    chrome.tabs.goBack().catch(close);
+  } else {
+    sendCmdDirectly('TabClose');
+  }
 }
 async function getFile(url, opts) {
   const { isBlob, useCache } = opts || {};

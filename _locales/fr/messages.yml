@@ -63,6 +63,9 @@ buttonInstallOptions:
 buttonNew:
   description: Button to create a new script.
   message: Nouveau
+buttonNewFromFile:
+  description: Button to create a new script from a local file.
+  message: ''
 buttonOK:
   description: OK button on dialog.
   message: OK
@@ -281,6 +284,9 @@ fileInstallBlocked:
     fichiers » dans les détails de Violentmonkey sur la page
     chrome://extensions. Ceci est dangereux car n'importe quel script
     utilisateur peut lire n'importe quel fichier local.
+fileInstallBlockedFF:
+  description: Text in the installer when a local file is dropped into Firefox window.
+  message: ''
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: alphabétique
@@ -335,7 +341,7 @@ headerRecycleBin:
   message: Corbeille
 helpForLocalFile:
   description: Label of the checkbox.
-  message: Montrer les instructions pour les scripts locaux glissés-déposés
+  message: ''
 hintForBatchAction:
   description: Hint shown next to the buttons for batch actions.
   message: pour les $1 scripts correspondants
@@ -441,7 +447,7 @@ labelBlacklist:
   message: Liste noire
 labelComment:
   description: Label for a comment text in the script editor settings.
-  message: ''
+  message: How
 labelContributors:
   description: Label for link to contributors.
   message: Contributors
@@ -490,23 +496,46 @@ labelExportScriptData:
 labelExposeStatus:
   description: Option in advanced settings.
   message: "Exposer la version installée sur les sites de scripts utilisateur\_: $1"
-labelFastFirefoxInject:
+labelFastInject:
   description: (`$1` will be shown as `page`) Option in Advanced settings.
-  message: Mode alternatif $1 sur Firefox
-labelFastFirefoxInjectHint:
+  message: Mode alternatif $1
+labelFastInjectHint:
   description: Tooltip hint for the option in Advanced settings.
   message: >-
-    Méthode d'injection alternative pour les scripts <document-start> depuis
-    Firefox 59, offrant de meilleures performances que le mode par défaut. Tout
-    comme le mode "page synchrone", cette méthode consomme plus de mémoire, vous
-    voudrez donc peut-être désactiver cette option si vos scripts fonctionnent
-    mieux sans cette option.
+    Méthode d'injection alternative pour les scripts <document-start>, offrant
+    de meilleures performances que le mode par défaut. Tout comme le mode "page
+    synchrone", cette méthode consomme plus de mémoire, vous voudrez donc
+    peut-être désactiver cette option si vos scripts fonctionnent mieux sans
+    cette option.
 labelFeedback:
   description: Label of link to feedback page.
   message: Retour d’expérience
+labelFirefoxPatchCsp:
+  description: Option in Advanced settings.
+  message: ''
+labelFirefoxPatchCspHint:
+  description: >-
+    (`$1` will be shown as <page>, $2 is <wrappedJSObject>) Hint for the option
+    in Advanced settings.
+  message: ''
+labelFirefoxPatchCspPopup:
+  description: >-
+    ($1 is <content>, $2 is a translation for "Bypass CSP") Message for a script
+    in the popup's extras menu.
+  message: ''
 labelGeneral:
   description: Label for general settings.
   message: Général
+  touched: false
+labelGmDownloadViaApi:
+  description: Option in Advanced settings to use the browser download API for GM_download.
+  message: ''
+labelGmDownloadViaApiHint:
+  description: Tooltip for the browser download option in Advanced settings.
+  message: ''
+labelGrantPermission:
+  description: Button to request the API permission.
+  message: ''
 labelHelpTranslate:
   description: Label for link to localization guide in about tab
   message: Aider à traduire
@@ -521,7 +550,11 @@ labelHttpOnlyCookie:
   message: ''
 labelHttpOnlyCookieHint:
   description: Tooltip for the HTTP-only cookie option.
-  message: ''
+  message: >-
+    Quand cette option est activée, les scripts peuvent lire et écrire dans les
+    cookies avec la mention HTTP-only. Cela permet aux scripts d'accéder aux
+    cookies qui n'ont pas été rendus accessibles. via Javascript. À utiliser
+    avec précaution, car cette option peut causer des risques de sécurité.
 labelIconURL:
   description: Label for the input.
   message: 'URL de l''icône :'
@@ -582,7 +615,7 @@ labelNotifyUpdatesGlobal:
     l'éditeur)
 labelPageMenuCommands:
   description: Checkbox item in page context menu and option to enable script commands.
-  message: ''
+  message: Montrer les commandes de script dans la page de menu
 labelPrivacyPolicy:
   description: Label of link to privacy policy
   message: Politique de confidentialité
@@ -672,7 +705,7 @@ labelSyncS3Prefix:
   message: ''
 labelSyncS3Region:
   description: Label for S3 region input.
-  message: ''
+  message: 'Région :'
 labelSyncS3SecretAccessKey:
   description: Label for S3 secret access key input.
   message: ''
@@ -740,6 +773,9 @@ learnBlacklist:
 learnInjectionMode:
   description: Refers to a link to introduce injection modes.
   message: En savoir plus sur les modes d’injection
+linkManageRemoteFiles:
+  description: Label for link to manage remote files.
+  message: Gérer les fichiers distants
 menuCommands:
   description: Menu item to list script commands.
   message: Commandes de script
@@ -1106,19 +1142,19 @@ titleSearchHintV2:
     * Les conditions séparées par des espaces peuvent être combinées
 
 
-    * Recherche par métadonnées : <code>"Awesome Script" "Description"</code> 
+    * Recherche par métadonnées : <code>"Awesome Script" "Description"</code>
 
 
-    * Recherche par tags : <code>#tag1 #tag2</code> 
+    * Recherche par tags : <code>#tag1 #tag2</code>
 
 
-    * Recherche par nom de script : <code>name : "awesome name"</code> 
+    * Recherche par nom de script : <code>name : "awesome name"</code>
 
 
-    * Recherche par code du script : <code>code : "awesome code"</code> 
+    * Recherche par code du script : <code>code : "awesome code"</code>
 
 
-    * Recherche négative : <code>!#tag2 !name : "unwanted" 
+    * Recherche négative : <code>!#tag2 !name : "unwanted"
 
 
     * Expressions régulières : <code>/\w+?/</code>, <code>/\w+?/gi</code>,
@@ -1151,6 +1187,12 @@ updateScriptsAll:
 updateScriptsInTab:
   description: Command/button to update scripts that run in current tab.
   message: Mettre à jour les scripts de l'onglet actuel
+userScriptsPermissionNote:
+  description: Text in the popup or dashboard.
+  message: ''
+userScriptsPermissionNoteOld:
+  description: Text in the popup or dashboard in older browsers.
+  message: ''
 valueLabelKey:
   description: Label for key of a script value.
   message: Clé (chaine de caractères)

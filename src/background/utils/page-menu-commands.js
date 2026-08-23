@@ -17,8 +17,8 @@ import { forEachTab, tabsOnActivated, tabsOnRemoved } from './tabs';
 
 /** Promisified explicitly on demand because it returns an id in Firefox and not a Promise */
 export const contextMenus = chrome.contextMenus;
+export const CMD_PREFIX = 'cmd:';
 const ROOT_ID = 'cmdRoot';
-const CMD_PREFIX = 'cmd:';
 const MAX_TITLE_LEN = 250;
 const SHORT_ID = Symbol('_id');
 /** @type {chrome.contextMenus.CreateProperties} */
@@ -60,6 +60,9 @@ export function setMenus(menus, { tab, [kFrameId]: frameId, [kTop]: isTop }, res
   const tabId = tab.id;
   const routes = tabRoutes[tabId] ??= {};
   const byTab = tabData[tabId] ??= {};
+  if (typeof menus === 'string') {
+    menus = JSON.parse(menus);
+  }
   if (isEmpty(menus)) {
     if (reset && isTop) {
       delete tabData[tabId];
@@ -108,7 +111,7 @@ export function addMenuConfig(data) {
  * @returns {boolean?} true if handled
  */
 export function handlePageMenuCommand(id, { id: tabId }, frameId) {
-  if (!tabData || typeof id !== 'string' || !id.startsWith(CMD_PREFIX)) {
+  if (!tabData) {
     return;
   }
   const [/*prefix*/, sTabId, sScriptId, _id] = id.split(':');
@@ -150,7 +153,7 @@ if (contextMenus) {
   hookOptionsInit(({ [kPageMenuCommands]: state }, firstRun) => {
     if (state != null && state !== !!tabData) {
       setEnabled(state);
-      if (!firstRun) forEachTab(tab => sendTabCmd(tab.id, kUseMenu, state));
+      if (!firstRun) forEachTab(sendTabCmd, kUseMenu, state);
     }
   });
 }

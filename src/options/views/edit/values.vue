@@ -211,7 +211,7 @@ let storageSentry;
 onActivated(() => {
   const root = $el.value;
   const { id } = props.script.props;
-  const bg = getBgPage();
+  const bg = !__.MV3 && getBgPage();
   root::addEventListener('focusin', onFocus);
   (current.value ? cm : focusedElement)?.focus();
   sendCmdDirectly('GetValueStore', id, undefined, sender = fakeSender()).then(data => {
@@ -239,7 +239,7 @@ onActivated(() => {
   storageSentry = chrome.runtime.connect({
     name: WATCH_STORAGE + JSON.stringify({
       cfg: { value: id },
-      id: bg?.[WATCH_STORAGE](onStorageChanged),
+      id: bg && bg[WATCH_STORAGE](onStorageChanged),
       tabId: sender.tab.id,
     }),
   });

@@ -1,23 +1,28 @@
 import {
-  dataUri2text, i18n, getScriptHome, isDataUri,
-  getScriptName, getScriptsTags, getScriptUpdateUrl, isRemote, sendCmd, trueJoin,
-  getScriptPrettyUrl, getScriptRunAt, makePause, isValidHttpUrl,
-  ignoreChromeErrors,
+  dataUri2text, getScriptHome, getScriptName, getScriptPrettyUrl, getScriptRunAt, getScriptsTags,
+  getScriptUpdateUrl, i18n, ignoreChromeErrors, isDataUri, isRemote, isValidHttpUrl,
+  makePause, trueJoin,
 } from '@/common';
 import {
-  FETCH_OPTS, INFERRED, kTag, TIMEOUT_24HOURS, TIMEOUT_WEEK, TL_AWAIT,
+  CACHE_KEYS, FETCH_OPTS, INFERRED, kDownloads, kTag, PROMISE, REQ_KEYS, TIMEOUT_24HOURS,
+  TIMEOUT_WEEK, TL_AWAIT, VALUE_IDS,
 } from '@/common/consts';
 import { deepSize, forEachEntry, forEachKey, forEachValue } from '@/common/object';
+import { isGmStorageGranted } from '@/common/script';
 import pluginEvents from '../plugin/events';
+import broadcast from './broadcast';
 import {
   aliveScripts, getDefaultCustom, getNameURI, inferScriptProps, newScript, parseMeta,
-  removedScripts, scriptMap,
+  removedScripts, scriptMap, scriptSiteVisited,
 } from './script';
 import { testBlacklist, testerBatch, testScript } from './tester';
 import { getImageData } from './icon';
 import { addOwnCommands, addPublicCommands, commands, resolveInit } from './init';
+import { installedOver, NEW_INSTALL } from './on-installed';
 import patchDB from './patch-db';
+import { permissionDownloads } from './permissions';
 import { initOptions, kVersion, setOption } from './options';
+import sessionData, { flushSession, kScriptSizes, scriptSizes } from './session-data';
 import storage, {
   S_CACHE, S_CODE, S_REQUIRE, S_SCRIPT, S_VALUE,
   S_CACHE_PRE, S_CODE_PRE, S_MOD_PRE, S_REQUIRE_PRE, S_SCRIPT_PRE, S_VALUE_PRE,
@@ -31,8 +36,6 @@ let maxScriptId = 0;
 let maxScriptPosition = 0;
 /** @type {Map<string,number>} */
 export let dbKeys = new Map(); // 1: exists, 0: known to be absent
-/** @type {{ [url:string]: number }} */
-export let scriptSizes = {};
 /** Ensuring slow icons don't prevent installation/update */
 const ICON_TIMEOUT = 1000;
 export const kTryVacuuming = 'Try vacuuming database in options.';
@@ -94,13 +97,13 @@ addOwnCommands({
     const [script] = list.splice(i, 1);
     (removed ? removedScripts : aliveScripts).push(script);
   },
-  /** @return {Promise<number>} */
+  /** @return {boolean} */
   Move({ id, offset }) {
     const script = getScriptById(id);
     const index = aliveScripts.indexOf(script);
     aliveScripts.splice(index, 1);
     aliveScripts.splice(index + offset, 0, script);
-    return normalizePosition();
+    return !!normalizePosition();
   },
   ParseMeta: parseMetaWithErrors,
   ParseMetaErrors: data => parseMetaWithErrors(data).errors,
@@ -117,23 +120,33 @@ addOwnCommands({
   Vacuum: vacuum,
 });
 
-(async () => {
+export async function initializeDatabase(reset) {
+  if (reset) {
+    maxScriptId = 0;
+    maxScriptPosition = 0;
+    dbKeys.clear();
+    aliveScripts.length = 0;
+    removedScripts.length = 0;
+    scriptSizes = {}; // eslint-disable-line no-import-assign
+    for (const key in scriptMap) delete scriptMap[key];
+    for (const key in scriptSiteVisited) delete scriptSiteVisited[key];
+  }
   /** @type {string[]} */
-  let allKeys, keys;
-  if (getStorageKeys) {
-    allKeys = await getStorageKeys();
+  let keys;
+  let [allKeys, data] = await Promise.all([
+    getStorageKeys?.(),
+    !getStorageKeys && storage.api.get(),
+    sessionData,
+  ]);
+  if (allKeys) {
     // Filtering and creating Map in atomic native code operations instead of js loop
     keys = allKeys.join('\n').replace(/^(?:(options|version|(?:scr|mod):\d+)|\S+)$/gm, '$1').trim();
     dbKeys = new Map(JSON.parse(`[${keys.replace(/\S+/g, '["$&",1],').slice(0, -1)}]`));
     keys = keys.split(/\n+/);
+    data = await storage.api.get(keys);
   }
-  const lastVersion = (!getStorageKeys || dbKeys.has(kVersion))
-    && await storage.base.getOne(kVersion);
-  const version = process.env.VM_VER;
-  const versionChanged = version !== lastVersion;
-  if (!lastVersion) await patchDB();
-  if (versionChanged) storage.api.set({ [kVersion]: version });
-  const data = await storage.api.get(keys);
+  if (installedOver === NEW_INSTALL) await patchDB();
+  if (installedOver) storage.api.set({ [kVersion]: __.VM_VER });
   const uriMap = {};
   const defaultCustom = getDefaultCustom();
   data::forEachEntry(([key, script]) => {
@@ -182,25 +195,29 @@ addOwnCommands({
       meta.grant = [...new Set(meta.grant || [])]; // deduplicate
     }
   });
-  initOptions(data, lastVersion, versionChanged);
-  if (process.env.DEBUG) {
+  initOptions(data, installedOver, installedOver && installedOver !== NEW_INSTALL);
+  if (__.DEBUG) {
     console.info('store:', {
       aliveScripts, removedScripts, maxScriptId, maxScriptPosition, scriptMap, scriptSizes,
     });
   }
-  sortScripts();
-  setTimeout(async () => {
+  if (!__.MV3 || !sessionData.init) {
     if (allKeys?.length) {
       const set = new Set(keys); // much faster lookup
       const data2 = await storage.api.get(allKeys.filter(k => !set.has(k)));
       Object.assign(data, data2);
     }
-    vacuum(data);
-  }, 100);
-  checkRemove();
-  setInterval(checkRemove, TIMEOUT_24HOURS);
+    vacuum(data); // also calculates `scriptSizes`
+    checkRemove();
+    sortScripts();
+  }
+  if (!__.MV3) {
+    setInterval(checkRemove, TIMEOUT_24HOURS);
+  }
   resolveInit();
-})();
+}
+
+initializeDatabase();
 
 /** @return {number} */
 function getInt(val) {
@@ -217,31 +234,34 @@ function updateLastModified() {
   setOption('lastModified', Date.now());
 }
 
-/** @return {Promise<boolean>} */
-export async function normalizePosition() {
-  const updates = aliveScripts.reduce((res, script, index) => {
+/** @return {void | Promise<Object>} */
+function normalizePosition(positions) {
+  let updates;
+  maxScriptPosition = aliveScripts.length;
+  for (let index = 0; index < maxScriptPosition; index++) {
+    const script = aliveScripts[index];
     const { props } = script;
     const position = index + 1;
     if (props.position !== position) {
       props.position = position;
-      (res || (res = {}))[props.id] = script;
+      (updates ||= {})[props.id] = script;
+      if (positions) positions[props.id] = position;
     }
-    return res;
-  }, null);
-  maxScriptPosition = aliveScripts.length;
-  if (updates) {
-    await storage[S_SCRIPT].set(updates);
-    updateLastModified();
   }
-  return !!updates;
+  if (updates) {
+    updateLastModified();
+    return storage[S_SCRIPT].set(updates);
+  }
 }
 
 /** @return {Promise<Boolean>} */
 export async function sortScripts() {
-  aliveScripts.sort((a, b) => getInt(a.props.position) - getInt(b.props.position));
-  const changed = await normalizePosition();
-  sendCmd('ScriptsUpdated', null);
-  return changed;
+  aliveScripts.sort((a, b) => (a.props.position || 0) - (b.props.position || 0));
+  const positions = {};
+  if (normalizePosition(positions)) {
+    broadcast('ScriptsSorted', positions);
+    return true;
+  }
 }
 
 /** @return {?VMScript} */
@@ -270,16 +290,11 @@ export function getScripts() {
   return [...aliveScripts];
 }
 
-export const CACHE_KEYS = 'cacheKeys';
-export const REQ_KEYS = 'reqKeys';
-export const VALUE_IDS = 'valueIds';
-export const PROMISE = 'promise';
 const makeEnv = () => ({
   depsMap: {},
   [RUN_AT]: {},
   [SCRIPTS]: [],
 });
-const GMVALUES_RE = /^GM[_.](listValues|([gs]et|delete)Values?)$/;
 const STORAGE_ROUTES = {
   [S_CACHE]: CACHE_KEYS,
   [S_CODE]: IDS,
@@ -338,7 +353,7 @@ export function getScriptsByURL(url, isTop, errors, prevIds) {
     const { depsMap } = env;
     env[IDS].push(id);
     env[RUN_AT][id] = runAt;
-    if (meta.grant.some(GMVALUES_RE.test, GMVALUES_RE)) {
+    if (isGmStorageGranted(meta)) {
       env[VALUE_IDS].push(id);
     }
     if (!clipboardChecked) {
@@ -445,13 +460,7 @@ function reportBadScripts(ids) {
 
 export function notifyToOpenScripts(title, text, ids) {
   // FF doesn't show notifications of type:'list' so we'll use `text` everywhere
-  commands.Notification({
-    title,
-    text,
-    onclick() {
-      ids.forEach(id => commands.OpenEditor(id));
-    },
-  });
+  commands.Notification({ title, text, onclick: { cmd: 'OpenEditor', for: ids } });
 }
 
 /**
@@ -466,6 +475,7 @@ export async function getData({ id, ids, sizes }) {
     ? getScriptsByIdsOrAll(ids).filter(Boolean)
     : getScriptsByIdsOrAll();
   scripts.forEach(inferScriptProps);
+  res[kDownloads] = permissionDownloads;
   res[SCRIPTS] = scripts;
   if (sizes) res.sizes = getSizes(ids);
   if (!id) res.cache = await getIconCache(scripts);
@@ -550,7 +560,7 @@ export async function removeScripts(ids) {
     removedScripts.length = newLen; // live scripts were moved to the beginning
     await storage.api.remove(idsToRemove);
     vacuum();
-    return sendCmd('RemoveScripts', ids);
+    return broadcast('RemoveScripts', ids);
   }
 }
 
@@ -563,18 +573,6 @@ export function checkRemove({ force } = {}) {
   return removeScripts(ids);
 }
 
-/** @return {string} */
-const getUUID = crypto.randomUUID ? crypto.randomUUID.bind(crypto) : () => {
-  const rnd = new Uint16Array(8);
-  window.crypto.getRandomValues(rnd);
-  // xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
-  // We're using UUIDv4 variant 1 so N=4 and M=8
-  // See format_uuid_v3or5 in https://tools.ietf.org/rfc/rfc4122.txt
-  rnd[3] = rnd[3] & 0x0FFF | 0x4000; // eslint-disable-line no-bitwise
-  rnd[4] = rnd[4] & 0x3FFF | 0x8000; // eslint-disable-line no-bitwise
-  return '01-2-3-4-567'.replace(/\d/g, i => (rnd[i] + 0x1_0000).toString(16).slice(-4));
-};
-
 /**
  * @param {number} id
  * @param {DeepPartial<VMScript>} data
@@ -586,7 +584,7 @@ export async function updateScriptInfo(id, data) {
   }
   await Promise.all([
     storage.api.set({ [S_SCRIPT_PRE + id]: script }),
-    sendCmd('UpdateScript', { where: { id }, update: script }),
+    broadcast('UpdateScript', { where: { id }, update: script }),
   ]);
 }
 
@@ -640,7 +638,7 @@ export async function parseScript(src) {
     script = oldScript;
     id = script.props.id;
   } else {
-    ({ script } = newScript());
+    script = newScript();
     maxScriptId++;
     id = script.props.id = maxScriptId;
     result.isNew = true;
@@ -657,7 +655,7 @@ export async function parseScript(src) {
     delete script[INFERRED];
   }
   props.lastModified = now;
-  props.uuid = props.uuid || getUUID();
+  props.uuid = props.uuid || crypto.randomUUID();
   // Overwriting inner data by `src`, deleting keys for which `src` specifies `null`
   for (const key of ['config', 'custom', 'props']) {
     const dst = script[key];
@@ -701,7 +699,7 @@ export async function parseScript(src) {
   Object.assign(update, script, srcUpdate);
   result.where = { id };
   result[S_CODE] = src[S_CODE];
-  sendCmd('UpdateScript', result);
+  broadcast('UpdateScript', result);
   pluginEvents.emit('scriptChanged', result);
   if (src.reloadTab) reloadTabForScript(script);
   return result;
@@ -770,7 +768,7 @@ export async function fetchResources(script, src) {
   const error = errors.map(formatHttpError)::trueJoin('\n');
   if (error) {
     let message = i18n('msgErrorFetchingResource');
-    sendCmd('UpdateScript', {
+    broadcast('UpdateScript', {
       update: { error, message },
       where: { id: getPropsId(script) },
     });
@@ -880,7 +878,8 @@ export async function vacuum(data) {
       status[key] = -1;
     }
   });
-  scriptSizes = sizes;
+  scriptSizes = sizes; // eslint-disable-line no-import-assign
+  if (__.MV3) flushSession(kScriptSizes, scriptSizes);
   getScriptsByIdsOrAll().forEach((script) => {
     const { meta, props } = script;
     const icon = script.custom.icon || meta.icon;

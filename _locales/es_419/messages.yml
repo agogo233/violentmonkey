@@ -62,7 +62,10 @@ buttonInstallOptions:
   touched: false
 buttonNew:
   description: Button to create a new script.
-  message: Nuevo script
+  message: Nuevo
+buttonNewFromFile:
+  description: Button to create a new script from a local file.
+  message: Nuevo desde un archivo
 buttonOK:
   description: OK button on dialog.
   message: Aceptar
@@ -275,10 +278,15 @@ fileInstallBlocked:
     Hay varios métodos para instalar o rastrear ediciones en un archivo local:
     <1> Arrastra y suelta el archivo en una página abierta o menú emergente de
     Violentmonkey (incluida esta). <2> Instala un servidor HTTP local para ese
-    archivo y ábrelo desde http://localhost. <3> Activa la opción “Permitir el
-    acceso a las URL del archivo” en los detalles de Violentmonkey en la página
+    archivo y ábrelo desde http://localhost. <3> Activa la opción "Permitir el
+    acceso a las URL del archivo" en los detalles de Violentmonkey en la página
     chrome://extensions. Esto es peligroso, ya que cualquier userscript podría
     leer cualquier archivo local.
+fileInstallBlockedFF:
+  description: Text in the installer when a local file is dropped into Firefox window.
+  message: >-
+    Abre about:addons, selecciona "Violentmonkey", entra en "Permisos y datos" y
+    activa la opción "Acceso a archivos locales en tu computadora".
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: alfabéticamente
@@ -333,7 +341,7 @@ headerRecycleBin:
   message: Papelera de reciclaje
 helpForLocalFile:
   description: Label of the checkbox.
-  message: Mostrar las instrucciones para scripts locales arrastrados y soltados
+  message: Mostrar ayuda cuando no se pueda instalar un script local
 hintForBatchAction:
   description: Hint shown next to the buttons for batch actions.
   message: para $1 scripts coincidentes
@@ -350,7 +358,7 @@ hintGrantless:
     o usa `unsafeWindow` en lugar de `window`.
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
-  message: 'Ingrese la URL:'
+  message: 'Ingresa la URL:'
 hintRecycleBin:
   description: Hint for recycle bin.
   message: Los scripts eliminados se muestran aquí y se conservarán durante 7 días.
@@ -483,22 +491,53 @@ labelExportScriptData:
 labelExposeStatus:
   description: Option in advanced settings.
   message: 'Exponer la versión instalada en los sitios del catálogo de userscripts: $1'
-labelFastFirefoxInject:
+labelFastInject:
   description: (`$1` will be shown as `page`) Option in Advanced settings.
-  message: Modo $1 alternativo en Firefox
-labelFastFirefoxInjectHint:
+  message: Modo $1 alternativo
+labelFastInjectHint:
   description: Tooltip hint for the option in Advanced settings.
   message: >-
-    Un método de inyección alternativo para scripts <document-start> disponible
-    desde Firefox 59, más rápido que el modo predeterminado. Al igual que el
-    "modo page sincrónico", también incrementa el uso de memoria, por lo que
-    podrías desactivarlo si tus scripts funcionan correctamente sin esta opción.
+    Un método de inyección alternativo para scripts <document-start>, más rápido
+    que el modo predeterminado. Al igual que el "modo page sincrónico", también
+    incrementa el uso de memoria, por lo que podrías desactivarlo si tus scripts
+    funcionan correctamente sin esta opción.
 labelFeedback:
   description: Label of link to feedback page.
   message: Comentarios
+labelFirefoxPatchCsp:
+  description: Option in Advanced settings.
+  message: Omitir CSP en Firefox
+labelFirefoxPatchCspHint:
+  description: >-
+    (`$1` will be shown as <page>, $2 is <wrappedJSObject>) Hint for the option
+    in Advanced settings.
+  message: >-
+    Agrega un valor aleatorio al CSP de las páginas web que solo Violentmonkey
+    puede usar para ejecutar scripts en el modo de inyección $1; de lo
+    contrario, los scripts deben editarse para usar $2.
+labelFirefoxPatchCspPopup:
+  description: >-
+    ($1 is <content>, $2 is a translation for "Bypass CSP") Message for a script
+    in the popup's extras menu.
+  message: >-
+    El modo aislado $1 puede limitar la funcionalidad, consulta "$2" en las
+    opciones.
 labelGeneral:
   description: Label for general settings.
   message: General
+  touched: false
+labelGmDownloadViaApi:
+  description: Option in Advanced settings to use the browser download API for GM_download.
+  message: Usar la API de descargas del navegador
+labelGmDownloadViaApiHint:
+  description: Tooltip for the browser download option in Advanced settings.
+  message: >-
+    Permite que los scripts guarden archivos en subcarpetas dentro de tu
+    directorio de descargas y muestra el progreso en la barra de descargas del
+    navegador.
+labelGrantPermission:
+  description: Button to request the API permission.
+  message: Conceder permiso
 labelHelpTranslate:
   description: Label for link to localization guide in about tab
   message: Ayudar con la traducción
@@ -593,7 +632,7 @@ labelRemovedAt:
   message: Eliminado el $1
 labelReplace:
   description: Label for replace input in search box.
-  message: 'Remplazar con: '
+  message: 'Reemplazar con: '
 labelRunAt:
   description: Label of script @run-at properties in custom meta data.
   message: 'Ejecutar en: '
@@ -660,13 +699,13 @@ labelSyncS3Bucket:
   message: 'Bucket: '
 labelSyncS3Endpoint:
   description: Label for custom S3-compatible endpoint URL input (leave blank for AWS).
-  message: 'Endpoint personalizado:'
+  message: 'Endpoint personalizado: '
 labelSyncS3Prefix:
   description: Label for S3 key prefix input (folder within the bucket).
   message: 'Prefijo de clave: '
 labelSyncS3Region:
   description: Label for S3 region input.
-  message: 'Región:'
+  message: 'Región: '
 labelSyncS3SecretAccessKey:
   description: Label for S3 secret access key input.
   message: 'Clave secreta de acceso: '
@@ -734,6 +773,9 @@ learnBlacklist:
 learnInjectionMode:
   description: Refers to a link to introduce injection modes.
   message: Más información sobre los modos de inyección.
+linkManageRemoteFiles:
+  description: Label for link to manage remote files.
+  message: Administrar archivos remotos
 menuCommands:
   description: Menu item to list script commands.
   message: Comandos de scripts
@@ -791,7 +833,7 @@ menuScriptEnabled:
   message: Scripts habilitados
 msgCheckingForUpdate:
   description: Message shown when a script is being checked for updates by version numbers.
-  message: Buscar actualizaciones...
+  message: Buscando actualizaciones...
 msgDateFormatInfo:
   description: Help text of the info icon in VM settings for the export file name.
   message: >-
@@ -820,7 +862,7 @@ msgImported:
   description: >-
     Message shown after import. There is an argument referring to the count of
     scripts imported.
-  message: $1 script(s) importado(s).
+  message: $1 elemento(s) importado(s).
 msgIncognitoChanges:
   description: >-
     Message shown in popup and installation tab when opened in an incognito
@@ -913,10 +955,10 @@ msgSyncError:
   message: ¡Error de sincronización!
 msgSyncInit:
   description: Message shown when sync service is initializing.
-  message: Iniciando sincronización...
+  message: Inicializando...
 msgSyncInitError:
   description: Message shown when sync fails in initialization.
-  message: ¡Error al iniciar la sincronización!
+  message: ¡Error de inicialización!
 msgSyncNoAuthYet:
   description: Message shown when the selected sync provider hasn't been authorized yet.
   message: Todavía no está autorizado.
@@ -1026,7 +1068,7 @@ reinstall:
   message: Reinstalar
 reloadTab:
   description: Label of action to reload the tab
-  message: Recargar página
+  message: Recargar pestaña
 reloadTabTrackHint:
   description: Tooltip for "Reload tab" checkbox when installer is tracking a local file.
   message: >-
@@ -1137,6 +1179,16 @@ updateScriptsAll:
 updateScriptsInTab:
   description: Command/button to update scripts that run in current tab.
   message: Actualizar scripts de la pestaña actual
+userScriptsPermissionNote:
+  description: Text in the popup or dashboard.
+  message: >-
+    Activa la opción "Permitir scripts de usuario" en los detalles de
+    Violentmonkey en chrome://extensions y recarga la pestaña
+userScriptsPermissionNoteOld:
+  description: Text in the popup or dashboard in older browsers.
+  message: >-
+    Activa la opción "Modo desarrollador" en chrome://extensions y recarga la
+    pestaña
 valueLabelKey:
   description: Label for key of a script value.
   message: Clave (cadena)

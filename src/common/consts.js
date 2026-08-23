@@ -13,20 +13,17 @@ export const USERSCRIPT_META_INTRO = '==UserScript==';
  * To match Tampermonkey's relaxed parsing, we allow any preceding text at line start
  * (i.e. not just spaces for indented metablock comments, but literally anything)
  * and inside, but we'll warn about this later in the installer/editor. */
-export const METABLOCK_RE = re`/
+export const METABLOCK_RE = regex({ disable: { n: true } })`
 # 1          2           3
   ((?:^|\n)(.*?)\/\/([\x20\t]*)==UserScript==)
 # 4
   ([\s\S]*?\n)
 # 5  6          7
   ((.*?)\/\/([\x20\t]*)==\/UserScript==)
-/x`;
+`;
 export const META_STR = 'metaStr';
 export const NEWLINE_END_RE = /\n((?!\n)\s)*$/;
 export const WATCH_STORAGE = 'watchStorage';
-// `browser` is a local variable since we remove the global `chrome` and `browser` in injected*
-// to prevent exposing them to userscripts with `@inject-into content`
-export const browser = process.env.IS_INJECTED !== 'injected-web' && global.browser;
 
 // setTimeout truncates the delay to a 32-bit signed integer so the max delay is ~24 days
 export const TIMEOUT_MAX = 0x7FFF_FFFF;
@@ -36,6 +33,7 @@ export const TIMEOUT_WEEK = 7 * 24 * 60 * 60 * 1000;
 
 export const BLACKLIST = 'blacklist';
 export const BLACKLIST_NET = BLACKLIST + 'Net';
+export const BLOB_LIFE = 60e3;
 export const ERRORS = 'Errors';
 export const RUN_AT_RE = /^document-(start|body|end|idle)$/;
 export const KNOWN_INJECT_INTO = {
@@ -58,7 +56,7 @@ export const GLOB_ALL = '*://*/*';
 export const FILE_GLOB_ALL = 'file://*/*';
 export const XHR_COOKIE_RE = /:\W+([-\w]+)/; // extracts ://id in Chrome, ://{id} in Firefox
 /** @type {(str: string, opts?: {}) => Uint8Array} */
-export const U8_fromBase64 = process.env.IS_INJECTED !== 'injected-web' && Uint8Array.fromBase64;
+export const U8_fromBase64 = __.INJECTED !== 'injected-web' && Uint8Array.fromBase64;
 export const UPLOAD = 'upload';
 export const GM_API_NAMES = [
   'GM',
@@ -92,5 +90,15 @@ export const GM4_ALIAS = {
   getResourceURL: 'getResourceUrl',
   xmlhttpRequest: 'xmlHttpRequest',
 };
+export const kDownloadMode = 'downloadMode';
+export const kDownloads = 'downloads';
 export const kOrigTag = 'origTag';
 export const kTag = 'tag';
+export const kMainFrame = 'main_frame';
+export const kSubFrame = 'sub_frame';
+export const kContentType = 'content-type';
+export const CACHE_KEYS = 'cacheKeys';
+export const REQ_KEYS = 'reqKeys';
+export const VALUE_IDS = 'valueIds';
+export const PROMISE = 'promise';
+export const TLDJS = '/public/lib/tld.js';
