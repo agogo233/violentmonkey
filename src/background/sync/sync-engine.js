@@ -24,6 +24,7 @@ import {
   SYNC_ERROR,
   SYNC_ERROR_AUTH,
   SYNC_ERROR_INIT,
+  SYNC_ERROR_REPO_NOT_FOUND,
   SYNC_IN_PROGRESS,
   SYNC_INITIALIZING,
   SYNC_UNAUTHORIZED,
@@ -35,7 +36,30 @@ import {
   OAUTH2_UNAUTHORIZED,
   OAuth2Authorizers,
 } from '@usync/oauth2';
-import { DriveProviders } from '@usync/drive';
+import {
+  Dropbox,
+  GithubContents,
+  GoogleDrive,
+  OneDrive,
+  RepoNotFoundError,
+  S3,
+  WebDav,
+} from '@usync/drive';
+
+// @usync/drive only exports a `connectDrive(config, { providers })` factory
+// plus the individual provider classes — not an aggregate map — because its
+// own internal `builtinProviders` is intentionally unexported (extra
+// providers like `git` register through `options.providers` instead). We
+// don't use `connectDrive` here since this file already does its own
+// OAuth2Authorizer wiring below, so rebuild the lookup map ourselves.
+const DriveProviders = {
+  googledrive: GoogleDrive,
+  dropbox: Dropbox,
+  onedrive: OneDrive,
+  s3: S3,
+  webdav: WebDav,
+  'github-contents': GithubContents,
+};
 
 // --- Module-level state ---
 
@@ -401,7 +425,14 @@ export function createSyncService({
     }
     if (prepareError) {
       logError(prepareError);
-      setSyncState({ status: SYNC_UNAUTHORIZED });
+      // Thrown when the repo/project itself doesn't exist or isn't
+      // accessible to the token, distinct from a merely-empty path.
+      setSyncState({
+        status:
+          prepareError instanceof RepoNotFoundError
+            ? SYNC_ERROR_REPO_NOT_FOUND
+            : SYNC_UNAUTHORIZED,
+      });
     } else {
       setSyncState({ status: SYNC_AUTHORIZED });
     }
@@ -432,7 +463,7 @@ export function createSyncService({
       authorizer.setRefreshToken(null);
     }
     serviceConfig.set({ token: null, refresh_token: null });
-    prepare();
+    prepare().catch(noop);
   }
 
   // --- Drive operations ---
@@ -546,6 +577,8 @@ export function createSyncService({
   async function _sync() {
     const currentSyncMode = syncMode;
     syncMode = SYNC_MERGE;
+    const isPull = currentSyncMode === SYNC_PULL;
+    const isPush = currentSyncMode === SYNC_PUSH;
     progress = { finished: 0, total: 0 };
 
     const [remoteMeta, remoteData, localData] = await getSyncData();
@@ -643,14 +676,14 @@ export function createSyncService({
       }
     }
 
-    // Position and enabled post-processing
+    // Position post-processing
     const updateLocal = [];
     localData.forEach((item) => {
       const info = items[item.props.uri];
       if (info && info.lastModified === item.props.lastModified) {
         const updates = {};
         if (info.position !== item.props.position) {
-          if (globalLastModified <= remoteLastModified) {
+          if (globalLastModified <= remoteLastModified || isPull) {
             updates.props = { position: info.position };
           } else {
             info.position = item.props.position;
@@ -676,15 +709,46 @@ export function createSyncService({
         info.lastModified = now;
         remoteChanged = true;
       }
-      if (enableSync) {
-        const local = localData.find((i) => i.props.uri === item.uri);
-        const localEnabled = local?.config.enabled ?? 1;
-        if (localEnabled !== info.enabled) {
+    });
+
+    // Merge `config.enabled` like `position` above: last syncer wins by comparing
+    // the global `lastModified` clock (bumped on toggles) with the remote meta
+    // timestamp. Unlike `position` there's no content gate since a toggle bumps
+    // `props.lastModified`, which would otherwise always skip the merge.
+    // NOTE: the clock is global, so toggles of different scripts on different
+    // devices can overwrite each other, and a toggle also tilts `position` local.
+    if (enableSync) {
+      const deletedUris = new Set([
+        ...delRemote.map(({ remote }) => remote.uri),
+        ...delLocal.map(({ local }) => local.props.uri),
+      ]);
+      const localByUri = new Map(localData.map((item) => [item.props.uri, item]));
+      for (const [uri, local] of localByUri) {
+        const info = items[uri];
+        if (!info || !remoteItemMap[uri] || deletedUris.has(uri)) continue;
+        const localEnabled = local.config.enabled ?? 1;
+        if (info.enabled == null) {
+          // No remote opinion yet, initialize from local.
+          if (!isPull) {
+            info.enabled = localEnabled;
+            remoteChanged = true;
+          }
+          continue;
+        }
+        if (localEnabled === info.enabled) continue;
+        if (isPull || (!isPush && globalLastModified <= remoteLastModified)) {
+          updateLocal.push({
+            local,
+            updates: {
+              config: { enabled: info.enabled },
+            },
+          });
+        } else {
           info.enabled = localEnabled;
           remoteChanged = true;
         }
       }
-    });
+    }
 
     const promiseQueue = [
       ...putLocal.map(({ remote, info }) => {
@@ -696,9 +760,8 @@ export function createSyncService({
             objectSet(data, 'props.lastModified', info.lastModified);
           const position = +info.position;
           if (position) data.position = position;
-          if (enableSync) {
-            if (info.enabled != null)
-              objectSet(data, 'config.enabled', info.enabled);
+          if (enableSync && info.enabled != null) {
+            objectSet(data, 'config.enabled', info.enabled);
           }
           return pluginScript.update(data);
         });
@@ -767,7 +830,7 @@ export function createSyncService({
             remoteChanged = true;
           }
         }
-        if (remoteChanged) {
+        if (remoteChanged && !isPull) {
           const timestamp = Date.now();
           remoteMetaData.metadata.lastModified = timestamp;
           // Convert back to VM file format
@@ -802,7 +865,8 @@ export function createSyncService({
     try {
       await prepare();
     } catch {
-      // Sync in progress, ignore
+      // Prepare failed (e.g. another sync in progress), abort
+      return;
     }
     if (getSyncState().status !== SYNC_AUTHORIZED || getCurrent() !== name)
       return;
@@ -937,6 +1001,14 @@ function getService(name) {
   return services[name || getCurrent()];
 }
 
+// Explicit entry points (startup, credential save): run a sync when auto-sync
+// is on — which also kicks off the MV2 hourly chain — otherwise just refresh
+// the status with a single request.
+function syncOrRefresh() {
+  if (getOption('syncAutomatically')) return sync();
+  return getService()?.prepare().catch(noop);
+}
+
 export function initialize() {
   if (!syncConfig) {
     syncConfig = initConfig();
@@ -949,7 +1021,7 @@ export function initialize() {
   }
   resetSyncState();
   if (!__.MV3 || !sessionData.init) {
-    autoSync();
+    syncOrRefresh();
   }
   return !!getService();
 }
@@ -962,11 +1034,11 @@ export function sync() {
 }
 
 export function autoSync() {
-  if (getOption('syncAutomatically')) return sync();
-  const service = getService();
-  service?.prepare();
-  console.info('[sync] auto-sync disabled, check later');
-  if (!__.MV3) syncLater();
+  // No-op when auto-sync is off: even `prepare()` hits the network
+  // (e.g. PROPFIND on WebDAV), so storage changes and the hourly alarm
+  // must not trigger any request in that case.
+  if (!getOption('syncAutomatically')) return;
+  return sync();
 }
 
 export function authorize() {
@@ -983,6 +1055,6 @@ export function setConfig(cfg) {
   const service = getService();
   if (service) {
     service.setUserConfig(cfg);
-    return autoSync();
+    return syncOrRefresh();
   }
 }
